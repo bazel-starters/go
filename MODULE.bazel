@@ -1,0 +1,42 @@
+bazel_dep(name = "aspect_bazel_lib", version = "2.20.0")
+bazel_dep(name = "aspect_rules_lint", version = "1.5.1")
+bazel_dep(name = "buildifier_prebuilt", version = "8.2.0.2")
+bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "rules_multitool", version = "1.8.0")
+bazel_dep(name = "bazel_env.bzl", version = "0.5.0")
+bazel_dep(name = "bazelrc-preset.bzl", version = "1.1.0")
+bazel_dep(name = "rules_go", version = "0.56.1")
+bazel_dep(name = "gazelle", version = "0.45.0")
+bazel_dep(name = "rules_oci", version = "2.2.6")
+bazel_dep(name = "tar.bzl", version = "0.5.1")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
+multitool.hub(lockfile = "//tools:tools.lock.json")
+use_repo(multitool, "multitool")
+
+#########################
+# Go
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.nogo(nogo = "//tools/lint:nogo")
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+
+# All *direct* Go dependencies of the module have to be listed explicitly.
+# Run 'bazel mod tidy' to update this
+use_repo(go_deps)
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+# Base image for GO Containers.
+oci.pull(
+    name = "distroless_base",
+    digest = "sha256:1951bedd9ab20dd71a5ab11b3f5a624863d7af4109f299d62289928b9e311d5d",
+    image = "gcr.io/distroless/base",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+)
+use_repo(oci, "distroless_base", "distroless_base_linux_amd64", "distroless_base_linux_arm64")
