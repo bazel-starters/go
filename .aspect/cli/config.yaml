@@ -1,0 +1,10 @@
+configure:
+  languages:
+    go: true
+  plugins:
+    - .aspect/cli/go_image.star
+
+plugins:
+    - name: fix-visibility
+      from: github.com/aspect-build/plugin-fix-visibility
+      version: v0.1.0
